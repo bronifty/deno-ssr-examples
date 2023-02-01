@@ -1,26 +1,47 @@
-let isClient = typeof window !== "undefined";
 let isFirstRender = true;
 
-export async function render(document, { dinos }) {
-  if (isClient && isFirstRender) {
-    isFirstRender = false;
+// Simple HTML sanitization to prevent XSS vulnerabilities.
+function sanitizeHtml(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+export async function render(document, dinos) {
+  if (isFirstRender) {
     const jsonResponse = await fetch("http://localhost:8000/data");
-    const jsonData = await jsonResponse.json();
-    window.dinos = jsonData;
+    if (jsonResponse.ok) {
+      const jsonData = await jsonResponse.json();
+      const dinos = jsonData;
+      let html = "<html><ul>";
+      for (const item of dinos) {
+        html += `<li>${sanitizeHtml(item)}</li>`;
+      }
+      html += "</ul><input>";
+      html += "<button>Add</button></html>";
+      document.body.innerHTML = html;
+      isFirstRender = false;
+    } else {
+      document.body.innerHTML = "<html><p>Something went wrong.</p></html>";
+    }
+  } else {
+    let html = "<ul>";
+    for (const item of dinos) {
+      html += `<li>${sanitizeHtml(item)}</li>`;
+    }
+    html += "</ul>";
+    document.querySelector("ul").outerHTML = html;
   }
-  let html = "<html><ul>";
-  for (const item of dinos) {
-    html += `<li>${item}</li>`;
-  }
-  html += "</ul><input>";
-  html += "<button>Add</button></html>";
-  document.body.innerHTML = html;
 }
 
 export function addEventListeners() {
   document.querySelector("button").addEventListener("click", async () => {
     const item = document.querySelector("input").value;
-    window.dinos.push(item);
+    const dinos = Array.from(document.querySelectorAll("li"), e => e.innerText);
+    dinos.push(item);
     const response = await fetch("/add", {
       method: "POST",
       headers: {
@@ -28,9 +49,11 @@ export function addEventListeners() {
       },
       body: JSON.stringify({ item }),
     });
-    const status = response.status;
-    if (status === 200) {
-      render(document, window);
+    if (response.ok) {
+      render(document, dinos);
+    } else {
+      // In a real app, you'd want better error handling.
+      console.error("Something went wrong.");
     }
   });
 }

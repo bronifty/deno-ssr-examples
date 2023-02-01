@@ -1,33 +1,30 @@
-import { Application, send } from "https://deno.land/x/oak/mod.ts";
-import { Router } from "https://deno.land/x/oak/mod.ts";
-import { DOMParser } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
+import { Application } from "https://deno.land/x/oak@v11.1.0/mod.ts";
+import { Router } from "https://deno.land/x/oak@v11.1.0/mod.ts";
+import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.36-alpha/deno-dom-wasm.ts";
 import { render } from "./client.js";
-import { resolve } from "https://deno.land/std@0.172.0/path/mod.ts";
-const html = await Deno.readTextFile("./client.html");
 
+const html = await Deno.readTextFile("./client.html");
 const dinos = ["Allosaur", "T-Rex", "Deno"];
 const router = new Router();
 
 router.get("/client.js", async (context) => {
-  const path = resolve("./client.js");
   await context.send({
-    root: Deno.cwd(), // Deno.cwd() is the current working directory
+    root: Deno.cwd(),
     index: "client.js",
   });
 });
 
-router.get("/", async (context) => {
+router.get("/", (context) => {
   const document = new DOMParser().parseFromString(
     "<!DOCTYPE html>",
-    "text/html"
+    "text/html",
   );
   render(document, { dinos });
   context.response.type = "text/html";
   context.response.body = `${document.body.innerHTML}${html}`;
 });
 
-router.get("/data", async (context) => {
-  //send dinos to the client
+router.get("/data", (context) => {
   context.response.body = dinos;
 });
 

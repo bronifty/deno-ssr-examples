@@ -1,6 +1,5 @@
-import { Application, send } from "https://deno.land/x/oak/mod.ts";
-import { Router } from "https://deno.land/x/oak/mod.ts";
-import { Handlebars } from "https://deno.land/x/handlebars/mod.ts";
+import { Application, Router } from "https://deno.land/x/oak@v11.1.0/mod.ts";
+import { Handlebars } from "https://deno.land/x/handlebars@v0.9.0/mod.ts";
 
 const dinos = ["Allosaur", "T-Rex", "Deno"];
 const handle = new Handlebars();
